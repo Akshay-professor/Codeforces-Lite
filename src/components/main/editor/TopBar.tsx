@@ -1,4 +1,4 @@
-import { Braces, ChartNoAxesGantt, CloudUpload, Code2, LoaderCircle, Play, RotateCcw, Settings, Wifi, WifiOff } from 'lucide-react';
+import { Braces, ChartNoAxesGantt, CloudUpload, Code2, LoaderCircle, Play, RotateCcw, Settings, Wifi, WifiOff, FileCode2 } from 'lucide-react';
 import { ShortcutSettings, TopBarProps } from '../../../types/types';
 import React, { useEffect, useState, useRef } from 'react';
 import { useCFStore } from '../../../zustand/useCFStore';
@@ -21,7 +21,8 @@ const TopBar: React.FC<TopBarProps> = ({
     runCode,
     testCases,
     isFormating,
-    handleFormatCode
+    handleFormatCode,
+    handleLCFormat
 }) => {
 
     const [showRunTooltip, setShowRunTooltip] = useState<boolean>(false);
@@ -332,8 +333,18 @@ const TopBar: React.FC<TopBarProps> = ({
                 </div>
 
                 <div className='right-section'>
-                    <div className='cursor-pointer flex justify-center items-center' onClick={() => setShowOptions(true)}>
-                        <Settings color={theme === 'light' ? '#444444' : '#ffffff'} size={18} />
+                    <div className='cursor-pointer flex justify-center items-center gap-3'>
+                        <button
+                            disabled={!currentSlug}
+                            onClick={handleLCFormat}
+                            title="Transform this Codeforces problem into LeetCode format"
+                            className={`${!currentSlug && 'cursor-not-allowed opacity-50'}`}
+                        >
+                            <FileCode2 color={theme === 'light' ? '#444444' : '#ffffff'} size={18} />
+                        </button>
+                        <div onClick={() => setShowOptions(true)}>
+                            <Settings color={theme === 'light' ? '#444444' : '#ffffff'} size={18} />
+                        </div>
                     </div>
                 </div>
             </div>

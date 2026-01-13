@@ -13,6 +13,7 @@ interface CFStoreInterface {
     isRunning: boolean;
     isSubmitting: boolean;
     apiKey: string;
+    geminiApiKey: string;
     editorThemeList: Record<string, string>;
     editorSettings: EditorSettingsTypes;
     shortcutSettings: ShortcutSettings;
@@ -27,6 +28,7 @@ interface CFStoreInterface {
     setIsRunning: (running: boolean) => void;
     setIsSubmitting: (submitting: boolean) => void;
     setApiKey: (key: string) => void;
+    setGeminiApiKey: (key: string) => void;
     setEditorSettings: (editorSettings: EditorSettingsTypes) => void;
     setShortcutSettings: (shortcutSettings: ShortcutSettings) => void;
 }
@@ -42,6 +44,7 @@ export const useCFStore = create<CFStoreInterface>((set) => ({
     isRunning: false,
     isSubmitting: false,
     apiKey: localStorage.getItem('judge0CEApiKey') || '',
+    geminiApiKey: localStorage.getItem('geminiApiKey') || 'AIzaSyDILUvFmUVQe6O9EXsXVCVmrKfLz2TtA1A',
     editorThemeList: themesJSON,
     editorSettings: JSON.parse(localStorage.getItem('editorSettings') ?? 'null') ?? DEFAULT_EDITOR_SETTINGS,
     shortcutSettings: JSON.parse(localStorage.getItem('shortcutSettings') ?? 'null') ?? DEFAULT_SHORTCUT_SETTINGS,
@@ -55,6 +58,7 @@ export const useCFStore = create<CFStoreInterface>((set) => ({
     setIsRunning: (running) => set({ isRunning: running }),
     setIsSubmitting: (submitting) => set({ isSubmitting: submitting }),
     setApiKey: (key) => set({ apiKey: key }),
+    setGeminiApiKey: (key) => set({ geminiApiKey: key }),
     setEditorSettings: (editorSettings) => set({ editorSettings }),
     setShortcutSettings: (shortcutSettings) => set({ shortcutSettings }),
 }));
