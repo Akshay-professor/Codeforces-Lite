@@ -14,8 +14,11 @@ import { loadCodeWithCursor } from '../../utils/codeHandlers';
 import { accessRestrictionMessage } from '../../data/constants';
 import ApiLimitAlert from '../global/popups/ApiLimitAlert';
 import CodeEditor from './editor/CodeEditor';
+import LCFormatPanel from './LCFormatPanel';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { browserAPI } from '../../utils/browser/browserDetect';
+import { extractCFProblem, convertCFtoLC, LCFormat } from '../../utils/services/geminiService';
+import { toast } from 'sonner';
 
 interface MainProps {
     showOptions: boolean;
@@ -49,6 +52,9 @@ const Main: React.FC<MainProps> = ({ showOptions, setShowOptions, theme }) => {
     const [isFormating, setIsFormating] = useState(false);
     const shortcutSettings = useCFStore(state => state.shortcutSettings);
     const pressedKeysRef = useRef<Set<string>>(new Set());
+    const [showLCPanel, setShowLCPanel] = useState(false);
+    const [lcFormat, setLCFormat] = useState<LCFormat | null>(null);
+    const [isLoadingLC, setIsLoadingLC] = useState(false);
 
     useEffect(() => {
         setTimeout(() => {
@@ -241,8 +247,47 @@ const Main: React.FC<MainProps> = ({ showOptions, setShowOptions, theme }) => {
         formatCode(monacoInstanceRef, language,  setIsFormating);
     };
 
+    const handleLCFormat = async () => {
+        if (!currentSlug) {
+            toast.error('No problem detected. Please open a Codeforces problem.');
+            return;
+        }
+
+        setIsLoadingLC(true);
+        setShowLCPanel(true);
+        setLCFormat(null);
+
+        try {
+            toast.info('Extracting problem from page...');
+            const problemText = await extractCFProblem();
+            
+            if (!problemText) {
+                toast.error('Failed to extract problem. Please make sure you are on a Codeforces problem page.');
+                setShowLCPanel(false);
+                return;
+            }
+
+            toast.info('Converting to LeetCode format...');
+            const lcFormatData = await convertCFtoLC(problemText);
+            setLCFormat(lcFormatData);
+            toast.success('Successfully converted to LeetCode format!');
+        } catch (error: any) {
+            console.error('Error converting to LC format:', error);
+            toast.error(error.message || 'Failed to convert problem. Please try again.');
+            setShowLCPanel(false);
+        } finally {
+            setIsLoadingLC(false);
+        }
+    };
+
     return (
         <div className='flex flex-col w-full justify-start items-center h-full dark:bg-[#111111]'>
+            <LCFormatPanel
+                isOpen={showLCPanel}
+                onClose={() => setShowLCPanel(false)}
+                lcFormat={lcFormat}
+                theme={theme as "light" | "dark"}
+            />
             <ApiLimitAlert
                 isOpen={showApiLimitAlert}
                 setIsOpen={setShowApiLimitAlert}
@@ -264,6 +309,7 @@ const Main: React.FC<MainProps> = ({ showOptions, setShowOptions, theme }) => {
                 testCases={testCases.testCases}
                 isFormating={isFormating}
                 handleFormatCode={handleFormatCode}
+                handleLCFormat={handleLCFormat}
             />
 
             <div className="w-full h-[calc(100vh-88px)]">
