@@ -41,7 +41,8 @@ const Main: React.FC<MainProps> = ({ showOptions, setShowOptions, theme }) => {
         testCases,
         isRunning,
         isSubmitting,
-        setIsSubmitting
+        setIsSubmitting,
+        geminiApiKey
     } = useCFStore();
 
     // Custom hooks
@@ -253,6 +254,11 @@ const Main: React.FC<MainProps> = ({ showOptions, setShowOptions, theme }) => {
             return;
         }
 
+        if (!geminiApiKey) {
+            toast.error('Gemini API key not configured. Please set your API key in the settings.');
+            return;
+        }
+
         setIsLoadingLC(true);
         setShowLCPanel(true);
         setLCFormat(null);
@@ -268,7 +274,7 @@ const Main: React.FC<MainProps> = ({ showOptions, setShowOptions, theme }) => {
             }
 
             toast.info('Converting to LeetCode format...');
-            const lcFormatData = await convertCFtoLC(problemText);
+            const lcFormatData = await convertCFtoLC(problemText, geminiApiKey);
             setLCFormat(lcFormatData);
             toast.success('Successfully converted to LeetCode format!');
         } catch (error: any) {

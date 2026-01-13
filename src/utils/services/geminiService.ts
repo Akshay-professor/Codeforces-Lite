@@ -14,7 +14,6 @@ export interface LCFormat {
     testCaseFormat: string;
 }
 
-const GEMINI_API_KEY = 'AIzaSyDILUvFmUVQe6O9EXsXVCVmrKfLz2TtA1A';
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
 /**
@@ -38,11 +37,21 @@ export const extractCFProblem = async (): Promise<string> => {
             const timeLimit = timeLimitElement?.textContent?.trim() || '';
             const memoryLimit = memoryLimitElement?.textContent?.trim() || '';
 
-            // Extract problem description
-            const descriptionElements = problemStatement.querySelectorAll('.header + div');
+            // Extract problem description - look specifically for divs that follow .header elements
             let description = '';
-            descriptionElements.forEach(el => {
-                description += el.textContent?.trim() + '\n\n';
+            const headerElements = problemStatement.querySelectorAll('.header');
+            headerElements.forEach(header => {
+                const headerText = header.textContent?.trim().toLowerCase() || '';
+                // Skip input/output/note headers, only get the main problem description
+                if (!headerText.includes('input') && !headerText.includes('output') && !headerText.includes('note')) {
+                    let nextSibling = header.nextElementSibling;
+                    while (nextSibling && !nextSibling.classList.contains('header')) {
+                        if (nextSibling.tagName === 'DIV') {
+                            description += nextSibling.textContent?.trim() + '\n\n';
+                        }
+                        nextSibling = nextSibling.nextElementSibling;
+                    }
+                }
             });
 
             // Extract input/output format
@@ -78,9 +87,13 @@ export const extractCFProblem = async (): Promise<string> => {
 /**
  * Convert Codeforces problem to LeetCode format using Gemini API
  */
-export const convertCFtoLC = async (problemText: string): Promise<LCFormat> => {
+export const convertCFtoLC = async (problemText: string, apiKey: string): Promise<LCFormat> => {
     if (!problemText) {
         throw new Error('No problem text provided');
+    }
+
+    if (!apiKey) {
+        throw new Error('Gemini API key not configured. Please set your API key in the settings.');
     }
 
     const prompt = `You are a competitive programming expert. Transform the following Codeforces problem into LeetCode-style format with an OOP function signature in C++.
@@ -116,7 +129,7 @@ Guidelines:
 - Keep examples clear with explanations`;
 
     try {
-        const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+        const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
